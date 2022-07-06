@@ -1,0 +1,53 @@
+name: build
+on: [push]
+jobs:
+  php-cs-fixer:
+      name: Validate code style
+      runs-on: ubuntu-latest
+      steps:
+          - name: Checkout
+            uses: actions/checkout@v1
+          - name: Install Task
+            uses: Arduino/actions/setup-taskfile@master
+          - name: check codestyle
+            run: task check-code-style
+
+  composer-validate:
+    name: Validate composer configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Install Task
+        uses: Arduino/actions/setup-taskfile@master
+      - name: composer validate
+        run: task check-composer
+
+  php-magic-number-detector:
+      name: Validate no magic numbers
+      runs-on: ubuntu-latest
+      steps:
+          - name: Checkout
+            uses: actions/checkout@v1
+          - name: Install Task
+            uses: Arduino/actions/setup-taskfile@master
+          - name: run phpmnd
+            run: task check-magic-numbers
+
+  test:
+      name: Build application. Run analyze code and test
+      runs-on: ubuntu-latest
+      if: "!contains(github.event.head_commit.message, '[SKIP CI]')"
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v1
+        - name: Install Task
+          uses: Arduino/actions/setup-taskfile@master
+        - name: Build
+          run: docker-compose -f docker-compose.ci.yml up -d
+        - name: Check running containers
+          run: docker ps -a
+        - name: Composer install
+          run: task composer-install-ci
+        - name: PHPStan
+          run : task phpstan-ci

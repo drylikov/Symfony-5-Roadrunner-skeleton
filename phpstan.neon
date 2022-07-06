@@ -1,0 +1,6 @@
+parameters:
+    level: 2
+    excludes_analyse:
+        - var/
+        - vendor/
+    inferPrivatePropertyTypeFromConstructor: true

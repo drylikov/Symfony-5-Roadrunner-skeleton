@@ -1,0 +1,59 @@
+version: '3.2'
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  pg-data:
+  home-dir:
+
+services:
+  app: &app-service
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile_dev
+    restart: on-failure
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      #      - ./docker/app/app-entrypoint.sh:/app-entrypoint.sh:ro
+      - .:/app:cached
+      - home-dir:/home/user:cached
+    env_file:
+      - ./docker/docker-compose-dev.env
+    ports:
+      - '9001:80'
+      - '9002:443'
+    command: 'rr serve -v -d -c /app/.rr.local.yml'
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+
+  redis:
+    image: redis:${REDIS_VERSION:-5.0.5}-alpine
+    volumes:
+      - redis-data:/data:cached
+    ports:
+      - 6379
+      - '4004:6379' # Port 4004 for connecting from localhost
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-11.4}-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: 'forge'
+      POSTGRES_USER: 'forge'
+      POSTGRES_PASSWORD: 'forge'
+    volumes:
+      - pg-data:/var/lib/postgresql/data:rw
+    ports:
+      - 5432
+      - '4005:5432' # Port 4005 for connecting from localhost
+    networks:
+      - app-network

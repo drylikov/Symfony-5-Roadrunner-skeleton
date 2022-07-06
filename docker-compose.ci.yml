@@ -1,0 +1,29 @@
+version: '3.2'
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  home-dir:
+
+services:
+  app: &app-service
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile_ci
+    restart: on-failure
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - .:/app:cached
+      - home-dir:/home/user:cached
+    env_file:
+      - ./docker/docker-compose-ci.env
+    ports:
+      - '9001:80'
+      - '9002:443'
+    networks:
+      - app-network
+
+

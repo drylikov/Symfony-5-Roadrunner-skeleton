@@ -1,0 +1,11 @@
+Dockerfile
+.dockerignore
+docker*.yml
+vendor
+var
+*.log
+.gitignore
+.gitlab
+.idea
+.git
+#*.local.yml
